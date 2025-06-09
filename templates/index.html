@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anomali Detector 💀</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Halaman Utama */
+        .main-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            transition: all 0.5s ease;
+        }
+        
+        .main-page.blur {
+            filter: blur(5px);
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            padding: 40px;
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 3em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .webcam-container {
+            position: relative;
+            margin-bottom: 40px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            transform: perspective(1000px) rotateY(0deg);
+            transition: transform 0.3s ease;
+            width: 100%;
+            max-width: 715px;
+            height: 400px;
+        }
+        
+        #webcam-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .show-media-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .show-media-btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .show-media-btn:hover:before {
+            left: 100%;
+        }
+        
+        .show-media-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.6);
+        }
+        
+        .show-media-btn:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+        
+        .show-media-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .instructions {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(248, 249, 250, 0.9);
+            padding: 15px 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            z-index: 100;
+        }
+        
+        .instructions button {
+            background: none;
+            border: none;
+            color: #495057;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        
+        .instructions button:hover {
+            color: #667eea;
+        }
+        
+        /* Media Modal */
+        .media-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .media-modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .media-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+            animation: slideIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: scale(0.3) rotate(10deg);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+        
+        .media-content img,
+        .media-content video {
+            width: 100%;
+            height: 100%;
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+            display: block;
+            border-radius: 15px;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1001;
+        }
+        
+        .close-btn:hover {
+            background: white;
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+        
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: all 0.4s ease;
+        }
+        
+        .status.show {
+            transform: translateX(0);
+        }
+        
+        .status.success {
+            background: linear-gradient(45deg, #00c851, #007e33);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 200, 81, 0.4);
+        }
+        
+        .status.error {
+            background: linear-gradient(45deg, #ff4444, #cc0000);
+            color: white;
+            box-shadow: 0 5px 15px rgba(255, 68, 68, 0.4);
+        }
+        
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                max-height: 95vh;
+            }
+            
+            h1 {
+                font-size: 2.2em;
+                margin-bottom: 20px;
+            }
+            
+            .webcam-container {
+                height: 300px;
+                margin-bottom: 30px;
+            }
+            
+            .show-media-btn {
+                padding: 15px 30px;
+                font-size: 18px;
+            }
+            
+            .close-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+            }
+            
+            .instructions {
+                top: 10px;
+                left: 10px;
+                padding: 10px 15px;
+            }
+            
+            .media-content {
+                max-width: 95vw;
+                max-height: 85vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Halaman Utama -->
+    <div class="instructions">
+        <button onclick="caraPenggunaan()">❓ Cara penggunaan</button>
+    </div>
+    
+    <div id="main-page" class="main-page">
+        <div class="container">
+            <h1>💀 Anomali Detector</h1>
+            
+            <div class="webcam-container">
+                <img id="webcam-feed" src="{{ url_for('video_feed') }}" alt="Webcam Feed">
+            </div>
+            
+            <button class="show-media-btn" onclick="showRandomMedia()" id="anomali-btn">
+                💀 Apa Anomali Ku?
+            </button>
+        </div>
+    </div>
+
+    <!-- Media Modal -->
+    <div id="media-modal" class="media-modal">
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+        <div class="media-content" id="media-content">
+            <!-- Media content akan diisi di sini -->
+        </div>
+    </div>
+
+    <!-- Status Notification -->
+    <div id="status" class="status"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function caraPenggunaan() {
+            Swal.fire({
+                title: "Cara Penggunaan:",
+                text: "Klik tombol 'Apa Anomali Ku' untuk menampilkan anomali apa yang ada didalam jiwa kamu",
+                icon: "info",
+                toast: true,
+                position: "top-start",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Next"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: "Cara Penggunaan:",
+                        text: "Tunggu beberapa detik... Selamat Kamu adalah anomali, anomali adalah Kamu!!!",
+                        icon: "success",
+                        toast: true,
+                        position: "top-start",
+                    });
+                }
+            });
+        }
+
+        function showStatus(message, type = 'success') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type} show`;
+            
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 3000);
+        }
+        
+        function showRandomMedia() {
+            const btn = document.getElementById('anomali-btn');
+            const originalText = btn.innerHTML;
+            
+            // Loading state
+            btn.innerHTML = 'Loading... <div class="loading"></div>';
+            btn.disabled = true;
+            
+            fetch('/random-media')
+                .then(response => response.json())
+                .then(data => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    
+                    if (data.success) {
+                        displayMedia(data);
+                        showStatus(data.message, 'success');
+                    } else {
+                        showStatus(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    showStatus('Terjadi kesalahan saat memuat media!', 'error');
+                });
+        }
+        
+        function displayMedia(data) {
+            const modal = document.getElementById('media-modal');
+            const mediaContent = document.getElementById('media-content');
+            const mainPage = document.getElementById('main-page');
+            
+            // Blur background
+            mainPage.classList.add('blur');
+            
+            // Create media element
+            let mediaElement = '';
+            if (data.type === 'image') {
+                mediaElement = `<img src="${data.url}" alt="Anomali Image" loading="lazy">`;
+            } else if (data.type === 'video') {
+                mediaElement = `<video controls autoplay>
+                    <source src="${data.url}" type="video/mp4">
+                    <source src="${data.url}" type="video/webm">
+                    <source src="${data.url}" type="video/avi">
+                    Browser Anda tidak mendukung video.
+                </video>`;
+            }
+            
+            mediaContent.innerHTML = mediaElement;
+            modal.classList.add('show');
+            
+            // Add event listener for video if it's a video
+            if (data.type === 'video') {
+                const video = mediaContent.querySelector('video');
+                if (video) {
+                    video.volume = 1; // Set volume to 70%
+                    video.addEventListener('loadeddata', () => {
+                        video.play().catch(console.error);
+                    });
+                }
+            }
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('media-modal');
+            const mainPage = document.getElementById('main-page');
+            const mediaContent = document.getElementById('media-content');
+            
+            // Stop any playing video
+            const video = mediaContent.querySelector('video');
+            if (video) {
+                video.pause();
+                video.currentTime = 0;
+            }
+            
+            modal.classList.remove('show');
+            mainPage.classList.remove('blur');
+            
+            // Clear content after animation
+            setTimeout(() => {
+                mediaContent.innerHTML = '';
+            }, 500);
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            } else if (event.key === ' ' || event.key === 'Enter') {
+                event.preventDefault();
+                if (!document.getElementById('media-modal').classList.contains('show')) {
+                    showRandomMedia();
+                }
+            }
+        });
+        
+        // Click outside modal to close
+        document.getElementById('media-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal();
+            }
+        });
+        
+        // Auto-refresh webcam jika ada masalah
+        setInterval(() => {
+            const img = document.getElementById('webcam-feed');
+            if (img.complete && img.naturalHeight === 0) {
+                img.src = img.src.split('?')[0] + '?' + new Date().getTime();
+            }
+        }, 5000);
+        
+        // Handle image load errors
+        document.addEventListener('error', function(event) {
+            if (event.target.tagName === 'IMG' && event.target.id !== 'webcam-feed') {
+                showStatus('Gagal memuat gambar', 'error');
+                closeModal();
+            }
+        }, true);
+        
+        // Handle video load errors
+        document.addEventListener('error', function(event) {
+            if (event.target.tagName === 'VIDEO') {
+                showStatus('Gagal memuat video', 'error');
+                closeModal();
+            }
+        }, true);
+    </script>
+</body>
+</html>
